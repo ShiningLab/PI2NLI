@@ -21,10 +21,10 @@ def init_args():
     parser.add_argument('--max_length', type=int, default=156)
     parser.add_argument('--model', type=str, default='roberta-large-snli_mnli_fever_anli_R1_R2_R3-nli')
     # training
-    parser.add_argument('--train_batch_size', type=int, default=2)
-    parser.add_argument('--train_eval_size', type=int, default=2)
+    parser.add_argument('--train_batch_size', type=int, default=32)
+    parser.add_argument('--train_eval_size', type=int, default=64)
     parser.add_argument('--max_epochs', type=int, default=-1)  # to enable infinite training
-    parser.add_argument('--num_workers', type=int, default=12)
+    parser.add_argument('--num_workers', type=int, default=8)
     parser.add_argument("--learning_rate", type=float, default=1e-5)
     parser.add_argument("--weight_decay", type=float, default=0.0)
     parser.add_argument("--adam_epsilon", type=float, default=1e-8)

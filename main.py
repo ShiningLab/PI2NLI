@@ -5,6 +5,8 @@ __email__ = 'Email'
 
 
 # dependency
+# built-in
+import os
 # public
 import torch
 # private
@@ -28,6 +30,12 @@ class NLIer(object):
     def initialize(self):
         # setup random seed
         helper.set_seed(self.config.seed)
+        # enable tokenizer multi-processing
+        if self.config.num_workers > 0:
+            os.environ['TOKENIZERS_PARALLELISM'] = 'true'
+        # others
+        torch.set_float32_matmul_precision('high')
+
 
     def train(self):
         trainer = LitTrainer(self.config)

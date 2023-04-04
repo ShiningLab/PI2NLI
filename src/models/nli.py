@@ -25,7 +25,7 @@ class LitNLIClassifier(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         xs, ys = batch
         loss = self.model(**xs, labels=ys).loss
-        self.log('train_loss', loss)
+        self.log('train_loss', loss, prog_bar=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -36,7 +36,7 @@ class LitNLIClassifier(pl.LightningModule):
         ys1_ = outputs1.logits.softmax(dim=1).argmax(dim=1)
         ys_ = ((ys0_ == ys1_) * (ys0_ == self.config.ENTAILMENT)).int()
         acc = self.acc(ys_, ys).item()
-        self.log("val_acc", acc)
+        self.log("val_acc", acc, prog_bar=True)
 
     def configure_optimizers(self):
         no_decay = ['bias', 'LayerNorm.weight']

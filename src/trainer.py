@@ -6,7 +6,6 @@ __email__ = 'Email'
 
 # dependency
 # built-in
-import os
 from functools import partial
 # public
 from torch.utils import data as torch_data
@@ -40,9 +39,6 @@ class LitTrainer(object):
         self.model = LitNLIClassifier(self.config)
         # tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(self.config.LM_PATH)
-        # enable tokenizer multi-processing
-        if self.config.num_workers > 0:
-            os.environ["TOKENIZERS_PARALLELISM"] = "true"
         # callbacks
         early_stop_callback = EarlyStopping(
             monitor='val_acc'
