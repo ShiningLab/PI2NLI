@@ -72,7 +72,6 @@ class LitTrainer(object):
             , inference_mode=True
             )
 
-
     def setup_dataloader(self):
         train_dataset = QQPDataset('train', self.tokenizer, self.config)
         self.train_dataloader = torch_data.DataLoader(
@@ -87,7 +86,7 @@ class LitTrainer(object):
         val_dataset = QQPDataset('val', self.tokenizer, self.config)
         self.val_dataloader = torch_data.DataLoader(
             val_dataset
-            , batch_size=self.config.train_batch_size
+            , batch_size=self.config.train_eval_size
             , collate_fn=partial(val_dataset.collate_fn, self.tokenizer, False, self.config)
             , shuffle=False
             , num_workers=self.config.num_workers
