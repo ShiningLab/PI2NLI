@@ -3,6 +3,8 @@
 lm/
 log/
 data/
+ckpts/
+results/
 .DS_Store
 
 # Byte-compiled / optimized / DLL files

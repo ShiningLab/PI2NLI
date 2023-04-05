@@ -9,6 +9,7 @@ __email__ = 'Email'
 import os
 # public
 import torch
+from lightning.pytorch import seed_everything
 # private
 from config import Config
 from src.utils import helper
@@ -28,18 +29,25 @@ class NLIer(object):
         self.config.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     def initialize(self):
+        # results
+        self.results_dict = {}
+        # get trainer
+        self.trainer = LitTrainer(self.config)
         # setup random seed
-        helper.set_seed(self.config.seed)
+        seed_everything(self.config.seed, workers=True)
         # enable tokenizer multi-processing
         if self.config.num_workers > 0:
             os.environ['TOKENIZERS_PARALLELISM'] = 'true'
         # others
         torch.set_float32_matmul_precision('high')
 
-
     def train(self):
-        trainer = LitTrainer(self.config)
-        trainer.train()
+        # self.results_dict['0shot'] = self.trainer.validate()
+        # ckpt_path = os.path.join(self.config.CKPT_PATH, 'epoch=7-step=90960.ckpt')
+        # self.results_dict['best'] = self.trainer.validate(ckpt_path)
+        # save results
+        # helper.save_pickle(self.config.RESOURCE_PKL, self.results_dict)
+        self.trainer.train()
 
 def main() -> None:
     nlier = NLIer()

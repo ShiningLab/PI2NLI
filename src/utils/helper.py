@@ -6,13 +6,27 @@ __email__ = 'Email'
 
 # dependency
 # built-in
-import sys, random, logging
+import sys, random, pickle, logging
 # public
 import torch
 import wandb
 import transformers
 import numpy as np
 
+
+def save_pickle(path, obj):
+    """
+    To save a object as a pickle file.
+    """
+    with open(path, 'wb') as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+def load_pickle(path):
+    """
+    To load object from pickle file.
+    """
+    with open(path, 'rb') as f:
+        return pickle.load(f)
 
 def str2bool(v):
     """Method to map string to bool for argument parser"""
@@ -23,20 +37,6 @@ def str2bool(v):
     if v.lower() in ('no', 'false', 'f', 'n', '0'):
         return False
     raise argparse.ArgumentTypeError('Boolean value expected.')
-
-def set_seed(seed: int) -> None:
-    # random
-    random.seed(seed)
-    # numpy
-    np.random.seed(seed)
-    # torch
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    # transformers
-    transformers.set_seed(seed)
-    # cuda
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
 
 def init_logger(config):
     """initialize the logger"""

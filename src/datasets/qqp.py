@@ -16,10 +16,11 @@ from src.utils import helper
 
 class Dataset(Dataset):
     """docstring for Dataset"""
-    def __init__(self, mode, tokenizer, config):
+    def __init__(self, mode, tokenizer, config, samplesize=0):
         super(Dataset, self).__init__()
         self.mode = mode
         self.config = config
+        self.samplesize = samplesize
         assert mode in ['train', 'val']
         self.get_data()
         # self.format_data()
@@ -36,6 +37,14 @@ class Dataset(Dataset):
         raw_ds = [raw_df[c].tolist() for c in raw_df.columns]
         self.qs1_list, self.qs2_list, self.ys_list = raw_ds[3:]
         self.data_size = len(self.qs1_list)
+        if self.samplesize:
+            idxes = list(range(self.data_size))
+            random.shuffle(idxes)
+            idxes = idxes[:self.samplesize]
+            self.qs1_list = [self.qs1_list[i] for i in idxes]
+            self.qs2_list = [self.qs2_list[i] for i in idxes]
+            self.ys_list = [self.ys_list[i] for i in idxes]
+            self.data_size = len(self.qs1_list)
 
     def get_train_instances(self, q1, q2, y):
         # id2label = {0: "entailment", 1: "neutral", 2: "contradiction"}
@@ -76,7 +85,8 @@ class Dataset(Dataset):
                 , truncation=True
                 , max_length=config.max_length
              )
-            return xs_inputs_0, xs_inputs_1, torch.LongTensor(raw_ys)
+            return (raw_qs1, raw_qs2, raw_ys), \
+            (xs_inputs_0, xs_inputs_1, torch.LongTensor(raw_ys))
 
     def __getitem__(self, idx):
         q1, q2, y = self.qs1_list[idx], self.qs2_list[idx], self.ys_list[idx]

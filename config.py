@@ -29,7 +29,7 @@ def init_args():
     parser.add_argument("--weight_decay", type=float, default=0.0)
     parser.add_argument("--adam_epsilon", type=float, default=1e-8)
     # evaluation
-    parser.add_argument('--patience', type=int, default=32)
+    parser.add_argument('--patience', type=int, default=8)
     # save as argparse space
     return parser.parse_known_args()[0]
 
@@ -44,16 +44,17 @@ class Config(object):
         for k,v in kwargs.items():
             setattr(self, k, v)
         # I/O
-        self.CURR_PATH = os.path.dirname(os.path.realpath(__file__))
+        # self.CURR_PATH = os.path.dirname(os.path.realpath(__file__))
+        self.CURR_PATH = './'
         self.RESOURCE_PATH = os.path.join(self.CURR_PATH, 'res')
         self.DATA_PATH = os.path.join(self.RESOURCE_PATH, 'data')
-        self.DATA_PKL = os.path.join(self.DATA_PATH, f'{self.task}.pkl')
         # language model
         self.LM_PATH = os.path.join(self.RESOURCE_PATH, 'lm', self.model)
         # checkpoints
         self.CKPT_PATH = os.path.join(
             self.RESOURCE_PATH, 'ckpts', self.task, self.model, str(self.seed)
             )
+        os.makedirs(self.CKPT_PATH, exist_ok=True)
         # log
         self.ENTITY = 'mrshininnnnn'
         self.PROJECT = 'PI2NLI'
@@ -65,6 +66,12 @@ class Config(object):
         os.makedirs(self.LOG_PATH, exist_ok=True)
         self.LOG_TXT = os.path.join(self.LOG_PATH, f'{self.seed}.txt')
         os.remove(self.LOG_TXT) if os.path.exists(self.LOG_TXT) else None
+        # results
+        self.RESULTS_PATH = os.path.join(
+            self.RESOURCE_PATH, 'results', self.task, self.model,
+            )
+        os.makedirs(self.RESULTS_PATH, exist_ok=True)
+        self.RESOURCE_PKL = os.path.join(self.RESULTS_PATH, f'{self.seed}.pkl')
         # NLI
         # id2label = {0: "entailment", 1: "neutral", 2: "contradiction"}
         self.ENTAILMENT = 0
