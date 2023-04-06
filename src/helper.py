@@ -12,6 +12,9 @@ import torch
 import wandb
 import transformers
 import numpy as np
+# private
+from src import dataset
+from src import models
 
 
 def save_pickle(path, obj):
@@ -55,3 +58,21 @@ def init_logger(config):
 
 def flatten_list(regular_list: list) -> list:
     return [item for sublist in regular_list for item in sublist]
+
+def get_dataset(config):
+    match config.task:
+        case 'pi2nli':
+            return dataset.PI2NLIDataset
+        case 'pi':
+            return dataset.PIDataset
+        case _:
+            raise NotImplementedError
+
+def get_model(config):
+    match config.task:
+        case 'pi2nli':
+            return models.PI2NLIClassifier(config)
+        case 'pi':
+            return models.PIClassifier(config)
+        case _:
+            raise NotImplementedError

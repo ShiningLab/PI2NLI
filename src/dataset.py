@@ -11,19 +11,18 @@ import torch
 import pandas as pd
 from torch.utils.data import Dataset
 # private
-from src.utils import helper
+from src import helper
 
 
-class Dataset(Dataset):
-    """docstring for Dataset"""
+class PI2NLIDataset(Dataset):
+    """docstring for PI2NLIDataset"""
     def __init__(self, mode, tokenizer, config, samplesize=0):
-        super(Dataset, self).__init__()
+        super(PI2NLIDataset, self).__init__()
         self.mode = mode
         self.config = config
         self.samplesize = samplesize
         assert mode in ['train', 'val']
         self.get_data()
-        # self.format_data()
 
     def __len__(self): 
         return self.data_size
@@ -92,4 +91,57 @@ class Dataset(Dataset):
         q1, q2, y = self.qs1_list[idx], self.qs2_list[idx], self.ys_list[idx]
         if self.mode == 'train':
             return self.get_train_instances(q1, q2, y)
+        return q1, q2, y
+
+
+class PIDataset(Dataset):
+    """docstring for PIDataset"""
+    def __init__(self, mode, tokenizer, config, samplesize=0):
+        super(PIDataset, self).__init__()
+        self.mode = mode
+        self.config = config
+        self.samplesize = samplesize
+        assert mode in ['train', 'val']
+        self.get_data()
+
+    def __len__(self): 
+        return self.data_size
+
+    def get_data(self):
+        raw_data_path = os.path.join(self.config.DATA_PATH, 'qqp/raw')
+        tsv_name = 'dev' if self.mode == 'val' else 'train'
+        raw_tsv = os.path.join(raw_data_path, '{}.tsv'.format(tsv_name))
+        raw_df = pd.read_csv(raw_tsv, sep='\t')
+        # ['id', 'qid1', 'qid2', 'question1', 'question2', 'is_duplicate']
+        raw_ds = [raw_df[c].tolist() for c in raw_df.columns]
+        self.qs1_list, self.qs2_list, self.ys_list = raw_ds[3:]
+        self.data_size = len(self.qs1_list)
+        if self.samplesize:
+            idxes = list(range(self.data_size))
+            random.shuffle(idxes)
+            idxes = idxes[:self.samplesize]
+            self.qs1_list = [self.qs1_list[i] for i in idxes]
+            self.qs2_list = [self.qs2_list[i] for i in idxes]
+            self.ys_list = [self.ys_list[i] for i in idxes]
+            self.data_size = len(self.qs1_list)
+
+    def collate_fn(self, tokenizer, training, config, data):
+        # a customized collate function used in the data loader
+        raw_qs1, raw_qs2, raw_ys = zip(*data)
+        xs_inputs = tokenizer.batch_encode_plus(
+            list(zip(raw_qs1, raw_qs2))
+            , add_special_tokens=True
+            , return_tensors='pt'
+            , padding='max_length'
+            , truncation=True
+            , max_length=config.max_length
+         )
+        if training:
+            return xs_inputs, torch.LongTensor(raw_ys)
+        else:
+            return (raw_qs1, raw_qs2, raw_ys), \
+            (xs_inputs, torch.LongTensor(raw_ys))
+
+    def __getitem__(self, idx):
+        q1, q2, y = self.qs1_list[idx], self.qs2_list[idx], self.ys_list[idx]
         return q1, q2, y

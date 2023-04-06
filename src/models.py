@@ -13,13 +13,14 @@ from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 from torchmetrics.classification import BinaryAccuracy
 
 
-class LitNLIClassifier(pl.LightningModule):
-    """docstring for LitNLIClassifier"""
+class PI2NLIClassifier(pl.LightningModule):
+    """docstring for PI2NLIClassifier"""
     def __init__(self, config, **kwargs):
-        super(LitNLIClassifier, self).__init__()
+        super(PI2NLIClassifier, self).__init__()
         self.config = config
         self.update_config(**kwargs)
-        self.model = AutoModelForSequenceClassification.from_pretrained(self.config.LM_PATH)
+        self.model = AutoModelForSequenceClassification.from_pretrained(
+            self.config.LM_PATH)
         self.acc = BinaryAccuracy()
         self.save_hyperparameters()
 
@@ -27,7 +28,6 @@ class LitNLIClassifier(pl.LightningModule):
         # update configuration accordingly
         for k,v in kwargs.items():
             setattr(self.config, k, v)
-        # self.config.LM_PATH = './res/lm/roberta-large-snli_mnli_fever_anli_R1_R2_R3-nli'
 
     def training_step(self, batch, batch_idx):
         xs, ys = batch
@@ -44,7 +44,7 @@ class LitNLIClassifier(pl.LightningModule):
         ys1_ = outputs1.logits.softmax(dim=1).argmax(dim=1)
         ys_ = ((ys0_ == ys1_) * (ys0_ == self.config.ENTAILMENT)).int()
         acc = self.acc(ys_, ys).item()
-        self.log("val_acc", acc, prog_bar=True)
+        self.log("val_acc", acc)
 
     def predict_step(self, batch, batch_idx):
         raw_batch, batch = batch
@@ -56,6 +56,68 @@ class LitNLIClassifier(pl.LightningModule):
         ys1_ = outputs1.logits.softmax(dim=1).argmax(dim=1)
         ys_ = ((ys0_ == ys1_) * (ys0_ == self.config.ENTAILMENT)).int()
         return {'qs1': qs1, 'qs2': qs2, 'ys': ys, 'ys0_': ys0_, 'ys1_': ys1_, 'ys_': ys_}
+
+    def configure_optimizers(self):
+        no_decay = ['bias', 'LayerNorm.weight']
+        optimizer_grouped_parameters = [
+            {
+                "params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)]
+                , "weight_decay": self.config.weight_decay
+                }
+            , {
+                "params": [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)]
+                , "weight_decay": 0.0
+                }
+            ]
+        optimizer = torch.optim.AdamW(
+            optimizer_grouped_parameters
+            , lr=self.config.learning_rate
+            , eps=self.config.adam_epsilon
+            )
+        return optimizer
+
+
+class PIClassifier(pl.LightningModule):
+    """docstring for PIClassifier"""
+    def __init__(self, config, **kwargs):
+        super(PIClassifier, self).__init__()
+        self.config = config
+        self.update_config(**kwargs)
+        self.model = AutoModelForSequenceClassification.from_pretrained(
+            self.config.LM_PATH
+            , num_labels=2
+            , id2label={0: 'negative', 1: 'positive'}
+            , label2id={'negative': 0, 'positive': 1}
+            )
+        self.acc = BinaryAccuracy()
+        self.save_hyperparameters()
+
+    def update_config(self, **kwargs):
+        # update configuration accordingly
+        for k,v in kwargs.items():
+            setattr(self.config, k, v)
+
+    def training_step(self, batch, batch_idx):
+        xs, ys = batch
+        loss = self.model(**xs, labels=ys).loss
+        self.log('train_loss', loss, prog_bar=True)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        _, batch = batch
+        xs, ys = batch
+        outputs = self.model(**xs, labels=None)
+        ys_ = outputs.logits.softmax(dim=1).argmax(dim=1)
+        acc = self.acc(ys_, ys).item()
+        self.log("val_acc", acc)
+
+    def predict_step(self, batch, batch_idx):
+        raw_batch, batch = batch
+        qs1, qs2, ys = raw_batch
+        xs, _ = batch
+        outputs = self.model(**xs, labels=None)
+        ys_ = outputs.logits.softmax(dim=1).argmax(dim=1)
+        return {'qs1': qs1, 'qs2': qs2, 'ys': ys, 'ys_': ys_}
 
     def configure_optimizers(self):
         no_decay = ['bias', 'LayerNorm.weight']

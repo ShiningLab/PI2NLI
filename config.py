@@ -8,18 +8,25 @@ __email__ = 'Email'
 # built-in
 import os, argparse
 # private
-from src.utils import helper
+from src import helper
 
 
 def init_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=0, help='random seed')
     parser.add_argument('--load_ckpt', type=helper.str2bool, default=False)
+    # pi for training PI models then testing on PI
+    # pi2nli for training NLI models then testing on PI
+    parser.add_argument('--task', type=str, default='pi')
     # qqp for Quora Question Pairs
-    parser.add_argument('--task', type=str, default='qqp')
+    parser.add_argument('--data', type=str, default='qqp')
     # model
     parser.add_argument('--max_length', type=int, default=156)
-    parser.add_argument('--model', type=str, default='roberta-large-snli_mnli_fever_anli_R1_R2_R3-nli')
+    # NLI
+    # roberta-large-snli_mnli_fever_anli_R1_R2_R3-nli
+    # PI
+    # roberta-large
+    parser.add_argument('--model', type=str, default='roberta-large')
     # training
     parser.add_argument('--train_batch_size', type=int, default=32)
     parser.add_argument('--train_eval_size', type=int, default=64)
@@ -52,23 +59,24 @@ class Config(object):
         self.LM_PATH = os.path.join(self.RESOURCE_PATH, 'lm', self.model)
         # checkpoints
         self.CKPT_PATH = os.path.join(
-            self.RESOURCE_PATH, 'ckpts', self.task, self.model, str(self.seed)
+            self.RESOURCE_PATH, 'ckpts', self.task, self.data, self.model, str(self.seed)
             )
         os.makedirs(self.CKPT_PATH, exist_ok=True)
+        self.CKPT_LAST = os.path.join(self.CKPT_PATH, 'last.ckpt')
         # log
         self.ENTITY = 'mrshininnnnn'
         self.PROJECT = 'PI2NLI'
-        self.NAME = f'{self.task}-{self.model}-{self.seed}'
-        self.OFFLINE = False
+        self.NAME = f'{self.task}-{self.data}-{self.model}-{self.seed}'
+        self.OFFLINE = True
         self.LOG_PATH = os.path.join(
-            self.RESOURCE_PATH, 'log', self.task, self.model
+            self.RESOURCE_PATH, 'log', self.task, self.data, self.model
             )
         os.makedirs(self.LOG_PATH, exist_ok=True)
         self.LOG_TXT = os.path.join(self.LOG_PATH, f'{self.seed}.txt')
         os.remove(self.LOG_TXT) if os.path.exists(self.LOG_TXT) else None
         # results
         self.RESULTS_PATH = os.path.join(
-            self.RESOURCE_PATH, 'results', self.task, self.model,
+            self.RESOURCE_PATH, 'results', self.task, self.data, self.model,
             )
         os.makedirs(self.RESULTS_PATH, exist_ok=True)
         self.RESOURCE_PKL = os.path.join(self.RESULTS_PATH, f'{self.seed}.pkl')
