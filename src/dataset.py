@@ -16,49 +16,46 @@ from src import helper
 
 class PI2NLIDataset(Dataset):
     """docstring for PI2NLIDataset"""
-    def __init__(self, mode, tokenizer, config, samplesize=0):
+    def __init__(self, mode, config, samplesize=None):
         super(PI2NLIDataset, self).__init__()
+        assert mode in ['train', 'val', 'test']
         self.mode = mode
         self.config = config
         self.samplesize = samplesize
-        assert mode in ['train', 'val']
         self.get_data()
 
     def __len__(self): 
         return self.data_size
 
     def get_data(self):
-        raw_data_path = os.path.join(self.config.DATA_PATH, 'qqp/raw')
-        tsv_name = 'dev' if self.mode == 'val' else 'train'
-        raw_tsv = os.path.join(raw_data_path, '{}.tsv'.format(tsv_name))
-        raw_df = pd.read_csv(raw_tsv, sep='\t')
-        # ['id', 'qid1', 'qid2', 'question1', 'question2', 'is_duplicate']
-        raw_ds = [raw_df[c].tolist() for c in raw_df.columns]
-        self.qs1_list, self.qs2_list, self.ys_list = raw_ds[3:]
-        self.data_size = len(self.qs1_list)
+        data_dict = helper.load_pickle(self.config.DATA_PKL)
+        self.xs0_list = data_dict[self.mode]['xs0']
+        self.xs1_list = data_dict[self.mode]['xs1']
+        self.ys_list = data_dict[self.mode]['ys']
+        self.data_size = len(self.ys_list)
         if self.samplesize:
             idxes = list(range(self.data_size))
             random.shuffle(idxes)
             idxes = idxes[:self.samplesize]
-            self.qs1_list = [self.qs1_list[i] for i in idxes]
-            self.qs2_list = [self.qs2_list[i] for i in idxes]
+            self.xs0_list = [self.xs0_list[i] for i in idxes]
+            self.xs1_list = [self.xs1_list[i] for i in idxes]
             self.ys_list = [self.ys_list[i] for i in idxes]
-            self.data_size = len(self.qs1_list)
+            self.data_size = len(self.ys_list)
 
-    def get_train_instances(self, q1, q2, y):
+    def get_train_instances(self, x0, x1, y):
         # id2label = {0: "entailment", 1: "neutral", 2: "contradiction"}
         if y:  # positive instance
-            return (q1, q2, 0), (q2, q1, 0)
+            return (x0, x1, 0), (x0, x1, 0)
         else:  # negative instance
-            return (q1, q2, random.randint(1, 2)), (q2, q1, random.randint(1, 2))
+            return (x0, x1, random.randint(1, 2)), (x1, x0, random.randint(1, 2))
 
     def collate_fn(self, tokenizer, training, config, data):
         # a customized collate function used in the data loader
         if training:
             data = helper.flatten_list(data)
-            raw_qs1, raw_qs2, raw_ys = zip(*data)
+            raw_xs0, raw_xs1, raw_ys = zip(*data)
             xs_inputs = tokenizer.batch_encode_plus(
-                list(zip(raw_qs1, raw_qs2))
+                list(zip(raw_xs0, raw_xs1))
                 , add_special_tokens=True
                 , return_tensors='pt'
                 , padding='max_length'
@@ -67,9 +64,9 @@ class PI2NLIDataset(Dataset):
              )
             return xs_inputs, torch.LongTensor(raw_ys)
         else:
-            raw_qs1, raw_qs2, raw_ys = zip(*data)
+            raw_xs0, raw_xs1, raw_ys = zip(*data)
             xs_inputs_0 = tokenizer.batch_encode_plus(
-                list(zip(raw_qs1, raw_qs2))
+                list(zip(raw_xs0, raw_xs1))
                 , add_special_tokens=True
                 , return_tensors='pt'
                 , padding='max_length'
@@ -77,59 +74,58 @@ class PI2NLIDataset(Dataset):
                 , max_length=config.max_length
              )
             xs_inputs_1 = tokenizer.batch_encode_plus(
-                list(zip(raw_qs2, raw_qs1))
+                list(zip(raw_xs1, raw_xs0))
                 , add_special_tokens=True
                 , return_tensors='pt'
                 , padding='max_length'
                 , truncation=True
                 , max_length=config.max_length
              )
-            return (raw_qs1, raw_qs2, raw_ys), \
+            return (raw_xs0, raw_xs1, raw_ys), \
             (xs_inputs_0, xs_inputs_1, torch.LongTensor(raw_ys))
 
     def __getitem__(self, idx):
-        q1, q2, y = self.qs1_list[idx], self.qs2_list[idx], self.ys_list[idx]
+        x0, x1, y = self.xs0_list[idx], self.xs1_list[idx], self.ys_list[idx]
         if self.mode == 'train':
-            return self.get_train_instances(q1, q2, y)
-        return q1, q2, y
+            # PI2NLI
+            return self.get_train_instances(x0, x1, y)
+        # PI
+        return x0, x1, y
 
 
 class PIDataset(Dataset):
     """docstring for PIDataset"""
-    def __init__(self, mode, tokenizer, config, samplesize=0):
+    def __init__(self, mode, config, samplesize=None):
         super(PIDataset, self).__init__()
+        assert mode in ['train', 'val', 'test']
         self.mode = mode
         self.config = config
         self.samplesize = samplesize
-        assert mode in ['train', 'val']
         self.get_data()
 
     def __len__(self): 
         return self.data_size
 
     def get_data(self):
-        raw_data_path = os.path.join(self.config.DATA_PATH, 'qqp/raw')
-        tsv_name = 'dev' if self.mode == 'val' else 'train'
-        raw_tsv = os.path.join(raw_data_path, '{}.tsv'.format(tsv_name))
-        raw_df = pd.read_csv(raw_tsv, sep='\t')
-        # ['id', 'qid1', 'qid2', 'question1', 'question2', 'is_duplicate']
-        raw_ds = [raw_df[c].tolist() for c in raw_df.columns]
-        self.qs1_list, self.qs2_list, self.ys_list = raw_ds[3:]
-        self.data_size = len(self.qs1_list)
+        data_dict = helper.load_pickle(self.config.DATA_PKL)
+        self.xs0_list = data_dict[self.mode]['xs0']
+        self.xs1_list = data_dict[self.mode]['xs1']
+        self.ys_list = data_dict[self.mode]['ys']
+        self.data_size = len(self.ys_list)
         if self.samplesize:
             idxes = list(range(self.data_size))
             random.shuffle(idxes)
             idxes = idxes[:self.samplesize]
-            self.qs1_list = [self.qs1_list[i] for i in idxes]
-            self.qs2_list = [self.qs2_list[i] for i in idxes]
+            self.xs0_list = [self.xs0_list[i] for i in idxes]
+            self.xs1_list = [self.xs1_list[i] for i in idxes]
             self.ys_list = [self.ys_list[i] for i in idxes]
-            self.data_size = len(self.qs1_list)
+            self.data_size = len(self.ys_list)
 
     def collate_fn(self, tokenizer, training, config, data):
         # a customized collate function used in the data loader
-        raw_qs1, raw_qs2, raw_ys = zip(*data)
+        raw_xs0, raw_xs1, raw_ys = zip(*data)
         xs_inputs = tokenizer.batch_encode_plus(
-            list(zip(raw_qs1, raw_qs2))
+            list(zip(raw_xs0, raw_xs1))
             , add_special_tokens=True
             , return_tensors='pt'
             , padding='max_length'
@@ -139,9 +135,8 @@ class PIDataset(Dataset):
         if training:
             return xs_inputs, torch.LongTensor(raw_ys)
         else:
-            return (raw_qs1, raw_qs2, raw_ys), \
+            return (raw_xs0, raw_xs1, raw_ys), \
             (xs_inputs, torch.LongTensor(raw_ys))
 
     def __getitem__(self, idx):
-        q1, q2, y = self.qs1_list[idx], self.qs2_list[idx], self.ys_list[idx]
-        return q1, q2, y
+        return self.xs0_list[idx], self.xs1_list[idx], self.ys_list[idx]

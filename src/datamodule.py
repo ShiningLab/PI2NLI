@@ -25,10 +25,20 @@ class DataModule(pl.LightningDataModule):
     def setup(self, stage: str):
         match stage:
             case 'fit':
-                self.train_dataset = self.dataset('train', self.tokenizer, self.config, samplesize=100)
-                self.val_dataset = self.dataset('val', self.tokenizer, self.config, samplesize=100)
+                self.train_dataset = self.dataset('train', self.config)
+                self.val_dataset = self.dataset('val', self.config)
+                self.config.train_size = len(self.train_dataset)
+                self.config.val_size = len(self.val_dataset)
+            case 'validate':
+                self.val_dataset = self.dataset('val', self.config)
+            case 'test':
+                self.test_dataset = self.dataset('test', self.config)
+                self.config.test_size = len(self.test_dataset)
             case 'predict':
-                self.predict_dataset  = self.dataset('val', self.tokenizer, self.config, samplesize=100)
+                self.predict_dataset  = self.dataset('test', self.config)
+                self.config.predict_size = len(self.predict_dataset)
+            case _:
+                raise NotImplementedError
 
     def train_dataloader(self):
         return DataLoader(
@@ -44,7 +54,7 @@ class DataModule(pl.LightningDataModule):
     def val_dataloader(self):
         return DataLoader(
             self.val_dataset
-            , batch_size=self.config.train_eval_size
+            , batch_size=self.config.eval_batch_size
             , collate_fn=partial(self.val_dataset.collate_fn, self.tokenizer, False, self.config)
             , shuffle=False
             , num_workers=self.config.num_workers
@@ -52,10 +62,21 @@ class DataModule(pl.LightningDataModule):
             , drop_last=False
             )
 
+    def test_dataloader(self):
+        return DataLoader(
+            self.test_dataset
+            , batch_size=self.config.eval_batch_size
+            , collate_fn=partial(self.test_dataset.collate_fn, self.tokenizer, False, self.config)
+            , shuffle=False
+            , num_workers=self.config.num_workers
+            , pin_memory=True
+            , drop_last=False
+            )
+
     def predict_dataloader(self):
-        return torch_data.DataLoader(
+        return DataLoader(
             self.predict_dataset
-            , batch_size=self.config.train_eval_size
+            , batch_size=self.config.eval_batch_size
             , collate_fn=partial(self.predict_dataset.collate_fn, self.tokenizer, False, self.config)
             , shuffle=False
             , num_workers=self.config.num_workers

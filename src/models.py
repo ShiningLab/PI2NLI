@@ -10,7 +10,7 @@ import torch
 from transformers import AutoModelForSequenceClassification
 import lightning.pytorch as pl
 from lightning.pytorch.callbacks.early_stopping import EarlyStopping
-from torchmetrics.classification import BinaryAccuracy
+from torchmetrics.classification import BinaryAccuracy, BinaryF1Score
 
 
 class PI2NLIClassifier(pl.LightningModule):
@@ -20,8 +20,10 @@ class PI2NLIClassifier(pl.LightningModule):
         self.config = config
         self.update_config(**kwargs)
         self.model = AutoModelForSequenceClassification.from_pretrained(
-            self.config.LM_PATH)
-        self.acc = BinaryAccuracy()
+            self.config.LM_PATH
+            )
+        self.val_acc, self.val_f1 = BinaryAccuracy(), BinaryF1Score()
+        self.test_acc, self.test_f1 = BinaryAccuracy(), BinaryF1Score()
         self.save_hyperparameters()
 
     def update_config(self, **kwargs):
@@ -32,7 +34,7 @@ class PI2NLIClassifier(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         xs, ys = batch
         loss = self.model(**xs, labels=ys).loss
-        self.log('train_loss', loss, prog_bar=True)
+        self.log('train_loss', loss, prog_bar=True, on_step=True, on_epoch=False)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -43,19 +45,32 @@ class PI2NLIClassifier(pl.LightningModule):
         ys0_ = outputs0.logits.softmax(dim=1).argmax(dim=1)
         ys1_ = outputs1.logits.softmax(dim=1).argmax(dim=1)
         ys_ = ((ys0_ == ys1_) * (ys0_ == self.config.ENTAILMENT)).int()
-        acc = self.acc(ys_, ys).item()
-        self.log("val_acc", acc)
+        for metric, metric_f in zip(['val_acc', 'val_f1'], [self.val_acc, self.val_f1]):
+            metric_v = metric_f(ys_, ys).item()
+            self.log(metric, metric_v, on_step=False, on_epoch=True)
+
+    def test_step(self, batch, batch_idx):
+        _, batch = batch
+        xs0, xs1, ys = batch
+        outputs0 = self.model(**xs0, labels=None)
+        outputs1 = self.model(**xs1, labels=None)
+        ys0_ = outputs0.logits.softmax(dim=1).argmax(dim=1)
+        ys1_ = outputs1.logits.softmax(dim=1).argmax(dim=1)
+        ys_ = ((ys0_ == ys1_) * (ys0_ == self.config.ENTAILMENT)).int()
+        for metric, metric_f in zip(['test_acc', 'test_f1'], [self.test_acc, self.test_f1]):
+            metric_v = metric_f(ys_, ys).item()
+            self.log(metric, metric_v, on_step=False, on_epoch=True)
 
     def predict_step(self, batch, batch_idx):
         raw_batch, batch = batch
-        qs1, qs2, ys = raw_batch
+        raw_xs0, raw_xs1, ys = raw_batch
         xs0, xs1, _ = batch
         outputs0 = self.model(**xs0, labels=None)
         outputs1 = self.model(**xs1, labels=None)
         ys0_ = outputs0.logits.softmax(dim=1).argmax(dim=1)
         ys1_ = outputs1.logits.softmax(dim=1).argmax(dim=1)
         ys_ = ((ys0_ == ys1_) * (ys0_ == self.config.ENTAILMENT)).int()
-        return {'qs1': qs1, 'qs2': qs2, 'ys': ys, 'ys0_': ys0_, 'ys1_': ys1_, 'ys_': ys_}
+        return {'raw_xs0': raw_xs0, 'raw_xs1': raw_xs1, 'ys': ys, 'ys0_': ys0_, 'ys1_': ys1_, 'ys_': ys_}
 
     def configure_optimizers(self):
         no_decay = ['bias', 'LayerNorm.weight']
@@ -89,7 +104,8 @@ class PIClassifier(pl.LightningModule):
             , id2label={0: 'negative', 1: 'positive'}
             , label2id={'negative': 0, 'positive': 1}
             )
-        self.acc = BinaryAccuracy()
+        self.val_acc, self.val_f1 = BinaryAccuracy(), BinaryF1Score()
+        self.test_acc, self.test_f1 = BinaryAccuracy(), BinaryF1Score()
         self.save_hyperparameters()
 
     def update_config(self, **kwargs):
@@ -100,7 +116,7 @@ class PIClassifier(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         xs, ys = batch
         loss = self.model(**xs, labels=ys).loss
-        self.log('train_loss', loss, prog_bar=True)
+        self.log('train_loss', loss, prog_bar=True, on_step=True, on_epoch=False)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -108,16 +124,26 @@ class PIClassifier(pl.LightningModule):
         xs, ys = batch
         outputs = self.model(**xs, labels=None)
         ys_ = outputs.logits.softmax(dim=1).argmax(dim=1)
-        acc = self.acc(ys_, ys).item()
-        self.log("val_acc", acc)
+        for metric, metric_f in zip(['val_acc', 'val_f1'], [self.val_acc, self.val_f1]):
+            metric_v = metric_f(ys_, ys).item()
+            self.log(metric, metric_v)
+
+    def test_step(self, batch, batch_idx):
+        _, batch = batch
+        xs, ys = batch
+        outputs = self.model(**xs, labels=None)
+        ys_ = outputs.logits.softmax(dim=1).argmax(dim=1)
+        for metric, metric_f in zip(['test_acc', 'test_f1'], [self.test_acc, self.test_f1]):
+            metric_v = metric_f(ys_, ys).item()
+            self.log(metric, metric_v, on_step=False, on_epoch=True)
 
     def predict_step(self, batch, batch_idx):
         raw_batch, batch = batch
-        qs1, qs2, ys = raw_batch
+        xs0, xs1, ys = raw_batch
         xs, _ = batch
         outputs = self.model(**xs, labels=None)
         ys_ = outputs.logits.softmax(dim=1).argmax(dim=1)
-        return {'qs1': qs1, 'qs2': qs2, 'ys': ys, 'ys_': ys_}
+        return {'xs0': xs0, 'xs1': xs1, 'ys': ys, 'ys_': ys_}
 
     def configure_optimizers(self):
         no_decay = ['bias', 'LayerNorm.weight']

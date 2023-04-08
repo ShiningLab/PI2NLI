@@ -3,7 +3,7 @@ This repository is for the project On the Equivalence of Paraphrase Identificati
 
 ## Dependencies
 + python >= 3.10.10
-+ jupyterlab >= 3.6.3
++ pandas >= 1.5.3
 + transformers >= 4.27.4
 + pytorch-lightning >= 2.0.1
 
