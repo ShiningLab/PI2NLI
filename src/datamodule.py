@@ -41,9 +41,17 @@ class DataModule(pl.LightningDataModule):
                 raise NotImplementedError
 
     def train_dataloader(self):
+        # adjust batch size
+        match self.config.method:
+            case 'pi':
+                batch_size = self.config.train_batch_size
+            case 'pi2nli':
+                batch_size = self.config.train_batch_size // 2
+            case _:
+                raise NotImplementedError
         return DataLoader(
             self.train_dataset
-            , batch_size=self.config.train_batch_size
+            , batch_size=batch_size
             , collate_fn=partial(self.train_dataset.collate_fn, self.tokenizer, True, self.config)
             , shuffle=True
             , num_workers=self.config.num_workers

@@ -17,14 +17,14 @@ def init_args():
     parser.add_argument('--load_ckpt', type=helper.str2bool, default=False)
     # pi for training PI models then testing on PI
     # pi2nli for training NLI models then testing on PI
-    parser.add_argument('--task', type=str, default='pi2nli')
+    parser.add_argument('--method', type=str, default='pi2nli')
     # qqp for Quora Question Pairs
     parser.add_argument('--data', type=str, default='qqp')
     # model
     parser.add_argument('--max_length', type=int, default=156)
-    # NLI
+    # Mdeols for NLI
     # roberta-large-snli_mnli_fever_anli_R1_R2_R3-nli
-    # PI
+    # Models for PI
     # roberta-large
     parser.add_argument('--model', type=str, default='roberta-large-snli_mnli_fever_anli_R1_R2_R3-nli')
     # training
@@ -37,8 +37,13 @@ def init_args():
     parser.add_argument("--adam_epsilon", type=float, default=1e-8)
     # evaluation
     parser.add_argument('--patience', type=int, default=6)
+    # trainer
+    # (str, optional) Can be 'simple' or 'advanced'. Defaults to ''.
+    parser.add_argument('--profiler', type=str, default='') 
     # logger
-    parser.add_argument('--offline', type=helper.str2bool, default=False)
+    parser.add_argument('--offline', type=helper.str2bool, default=True) # True for development
+    # (str, optional) Can be 'online', 'offline' or 'disabled'. Defaults to online.
+    parser.add_argument('--wandb_mode', type=str, default='disabled')  # disabled for testing code
     parser.add_argument('--log_model', type=helper.str2bool, default=False)
     # save as argparse space
     return parser.parse_known_args()[0]
@@ -64,23 +69,23 @@ class Config(object):
         self.LM_PATH = os.path.join(self.RESOURCE_PATH, 'lm', self.model)
         # checkpoints
         self.CKPT_PATH = os.path.join(
-            self.RESOURCE_PATH, 'ckpts', self.task, self.data, self.model, str(self.seed)
+            self.RESOURCE_PATH, 'ckpts', self.method, self.data, self.model, str(self.seed)
             )
         os.makedirs(self.CKPT_PATH, exist_ok=True)
         self.CKPT_LAST = os.path.join(self.CKPT_PATH, 'last.ckpt')
         # log
         self.ENTITY = 'mrshininnnnn'
         self.PROJECT = 'PI2NLI'
-        self.NAME = f'{self.task}-{self.data}-{self.model}-{self.seed}'
+        self.NAME = f'{self.method}-{self.data}-{self.model}-{self.seed}'
         self.LOG_PATH = os.path.join(
-            self.RESOURCE_PATH, 'log', self.task, self.data, self.model, str(self.seed)
+            self.RESOURCE_PATH, 'log', self.method, self.data, self.model, str(self.seed)
             )
         os.makedirs(self.LOG_PATH, exist_ok=True)
         self.LOG_TXT = os.path.join(self.LOG_PATH, 'console_log.txt')
         os.remove(self.LOG_TXT) if os.path.exists(self.LOG_TXT) else None
         # results
         self.RESULTS_PATH = os.path.join(
-            self.RESOURCE_PATH, 'results', self.task, self.data, self.model,
+            self.RESOURCE_PATH, 'results', self.method, self.data, self.model,
             )
         os.makedirs(self.RESULTS_PATH, exist_ok=True)
         self.RESULTS_PKL = os.path.join(self.RESULTS_PATH, f'{self.seed}.pkl')

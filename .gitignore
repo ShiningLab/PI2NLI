@@ -5,6 +5,7 @@ log/
 data/
 ckpts/
 results/
+script/
 .DS_Store
 
 # Byte-compiled / optimized / DLL files

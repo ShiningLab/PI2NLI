@@ -67,6 +67,7 @@ class LitTrainer(object):
             , log_model=self.config.log_model
             , entity=self.config.ENTITY
             , save_code=False
+            , mode=self.config.wandb_mode
             )
         self.wandb_logger.experiment.config.update(self.config)
         # trainer
@@ -78,6 +79,7 @@ class LitTrainer(object):
             , enable_progress_bar=True
             , deterministic=True
             , inference_mode=True
+            , profiler=self.config.profiler if self.config.profiler else None
             )
 
     def train(self):
@@ -85,7 +87,7 @@ class LitTrainer(object):
         for k, v in self.config.__dict__.items():
             self.logger.info(f'\t{k}: {v}')
         # 0-shot
-        if self.config.task == 'pi2nli':
+        if self.config.method == 'pi2nli':
             self.logger.info("Applying Zero Shot PI2NLI...")
             predict_dict = self.predict(ckpt_path=None)
             self.results_dict['0shot'] = predict_dict
@@ -102,8 +104,8 @@ class LitTrainer(object):
             , ckpt_path= 'last' if self.config.load_ckpt else None
             )
         # validation
-        self.logger.info("Start validating...")
-        self.validate(ckpt_path='best')
+        # self.logger.info("Start validating...")
+        # self.validate(ckpt_path='best')
         # test
         self.logger.info("Start testing...")
         self.test(ckpt_path='best')

@@ -60,7 +60,7 @@ def flatten_list(regular_list: list) -> list:
     return [item for sublist in regular_list for item in sublist]
 
 def get_dataset(config):
-    match config.task:
+    match config.method:
         case 'pi2nli':
             return dataset.PI2NLIDataset
         case 'pi':
@@ -69,7 +69,7 @@ def get_dataset(config):
             raise NotImplementedError
 
 def get_model(config):
-    match config.task:
+    match config.method:
         case 'pi2nli':
             return models.PI2NLIClassifier(config)
         case 'pi':

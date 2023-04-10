@@ -7,10 +7,10 @@ __email__ = 'Email'
 # dependency
 # public
 import torch
+import numpy as np
 from transformers import AutoModelForSequenceClassification
 import lightning.pytorch as pl
-from lightning.pytorch.callbacks.early_stopping import EarlyStopping
-from torchmetrics.classification import BinaryAccuracy, BinaryF1Score
+from torchmetrics.classification import Accuracy, BinaryAccuracy, F1Score, BinaryF1Score
 
 
 class PI2NLIClassifier(pl.LightningModule):
@@ -22,6 +22,9 @@ class PI2NLIClassifier(pl.LightningModule):
         self.model = AutoModelForSequenceClassification.from_pretrained(
             self.config.LM_PATH
             )
+        self.train_loss_list = []
+        self.train_acc = Accuracy(task='multiclass', num_classes=3)
+        self.train_f1 = F1Score(task='multiclass', num_classes=3)
         self.val_acc, self.val_f1 = BinaryAccuracy(), BinaryF1Score()
         self.test_acc, self.test_f1 = BinaryAccuracy(), BinaryF1Score()
         self.save_hyperparameters()
@@ -33,43 +36,64 @@ class PI2NLIClassifier(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         xs, ys = batch
-        loss = self.model(**xs, labels=ys).loss
-        self.log('train_loss', loss, prog_bar=True, on_step=True, on_epoch=False)
-        return loss
+        outputs = self.model(**xs, labels=ys)
+        loss = outputs.loss.item()
+        self.train_loss_list.append(loss)
+        ys_ = outputs.logits.softmax(dim=1).argmax(dim=1)
+        self.log('train_step_loss', loss, prog_bar=True)
+        self.train_acc.update(ys_, ys)
+        self.train_f1.update(ys_, ys)
+        return outputs.loss
+
+    def on_train_epoch_end(self):
+        self.log_dict({
+            'train_epoch_loss': np.mean(self.train_loss_list, dtype='float32')
+            , 'train_acc': self.train_acc.compute()
+            , 'train_f1': self.train_f1.compute()
+            })
+        self.train_loss_list = []
+        self.train_acc.reset()
+        self.train_f1.reset()
+
+    def pi2nli(self, xs0, xs1):
+        ys0_ = self.model(**xs0, labels=None).logits.softmax(dim=1).argmax(dim=1)
+        ys1_ = self.model(**xs1, labels=None).logits.softmax(dim=1).argmax(dim=1)
+        ys_ = ((ys0_ == ys1_) * (ys0_ == self.config.ENTAILMENT)).int()
+        return ys0_, ys1_, ys_
 
     def validation_step(self, batch, batch_idx):
         _, batch = batch
         xs0, xs1, ys = batch
-        outputs0 = self.model(**xs0, labels=None)
-        outputs1 = self.model(**xs1, labels=None)
-        ys0_ = outputs0.logits.softmax(dim=1).argmax(dim=1)
-        ys1_ = outputs1.logits.softmax(dim=1).argmax(dim=1)
-        ys_ = ((ys0_ == ys1_) * (ys0_ == self.config.ENTAILMENT)).int()
-        for metric, metric_f in zip(['val_acc', 'val_f1'], [self.val_acc, self.val_f1]):
-            metric_v = metric_f(ys_, ys).item()
-            self.log(metric, metric_v, on_step=False, on_epoch=True)
+        _, _, ys_ = self.pi2nli(xs0, xs1)
+        self.val_acc.update(ys_, ys)
+        self.val_f1.update(ys_, ys)
+
+    def on_validation_epoch_end(self):
+        self.log_dict({
+            'val_acc': self.val_acc.compute()
+            , 'val_f1': self.val_f1.compute()
+            })
+        self.val_acc.reset()
+        self.val_f1.reset()
 
     def test_step(self, batch, batch_idx):
         _, batch = batch
         xs0, xs1, ys = batch
-        outputs0 = self.model(**xs0, labels=None)
-        outputs1 = self.model(**xs1, labels=None)
-        ys0_ = outputs0.logits.softmax(dim=1).argmax(dim=1)
-        ys1_ = outputs1.logits.softmax(dim=1).argmax(dim=1)
-        ys_ = ((ys0_ == ys1_) * (ys0_ == self.config.ENTAILMENT)).int()
-        for metric, metric_f in zip(['test_acc', 'test_f1'], [self.test_acc, self.test_f1]):
-            metric_v = metric_f(ys_, ys).item()
-            self.log(metric, metric_v, on_step=False, on_epoch=True)
+        _, _, ys_ = self.pi2nli(xs0, xs1)
+        self.test_acc.update(ys_, ys)
+        self.test_f1.update(ys_, ys)
+
+    def on_test_epoch_end(self):
+        self.log_dict({
+            'test_acc': self.test_acc.compute()
+            , 'test_f1': self.test_f1.compute()
+            })
+        self.test_acc.reset()
+        self.test_f1.reset()
 
     def predict_step(self, batch, batch_idx):
-        raw_batch, batch = batch
-        raw_xs0, raw_xs1, ys = raw_batch
-        xs0, xs1, _ = batch
-        outputs0 = self.model(**xs0, labels=None)
-        outputs1 = self.model(**xs1, labels=None)
-        ys0_ = outputs0.logits.softmax(dim=1).argmax(dim=1)
-        ys1_ = outputs1.logits.softmax(dim=1).argmax(dim=1)
-        ys_ = ((ys0_ == ys1_) * (ys0_ == self.config.ENTAILMENT)).int()
+        (raw_xs0, raw_xs1, ys), (xs0, xs1, _) = batch
+        ys0_, ys1_, ys_ = self.pi2nli(xs0, xs1)
         return {'raw_xs0': raw_xs0, 'raw_xs1': raw_xs1, 'ys': ys, 'ys0_': ys0_, 'ys1_': ys1_, 'ys_': ys_}
 
     def configure_optimizers(self):
@@ -104,6 +128,8 @@ class PIClassifier(pl.LightningModule):
             , id2label={0: 'negative', 1: 'positive'}
             , label2id={'negative': 0, 'positive': 1}
             )
+        self.train_loss_list = []
+        self.train_acc, self.train_f1 = BinaryAccuracy(), BinaryF1Score()
         self.val_acc, self.val_f1 = BinaryAccuracy(), BinaryF1Score()
         self.test_acc, self.test_f1 = BinaryAccuracy(), BinaryF1Score()
         self.save_hyperparameters()
@@ -115,32 +141,59 @@ class PIClassifier(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         xs, ys = batch
-        loss = self.model(**xs, labels=ys).loss
-        self.log('train_loss', loss, prog_bar=True, on_step=True, on_epoch=False)
-        return loss
+        outputs = self.model(**xs, labels=ys)
+        loss = outputs.loss.item()
+        self.train_loss_list.append(loss)
+        ys_ = outputs.logits.softmax(dim=1).argmax(dim=1)
+        self.log('train_step_loss', loss, prog_bar=True)
+        self.train_acc.update(ys_, ys)
+        self.train_f1.update(ys_, ys)
+        return outputs.loss
+
+    def on_train_epoch_end(self):
+        self.log_dict({
+            'train_epoch_loss': np.mean(self.train_loss_list, dtype='float32')
+            , 'train_acc': self.train_acc.compute()
+            , 'train_f1': self.train_f1.compute()
+            })
+        self.train_loss_list = []
+        self.train_acc.reset()
+        self.train_f1.reset()
 
     def validation_step(self, batch, batch_idx):
         _, batch = batch
         xs, ys = batch
         outputs = self.model(**xs, labels=None)
         ys_ = outputs.logits.softmax(dim=1).argmax(dim=1)
-        for metric, metric_f in zip(['val_acc', 'val_f1'], [self.val_acc, self.val_f1]):
-            metric_v = metric_f(ys_, ys).item()
-            self.log(metric, metric_v)
+        self.val_acc.update(ys_, ys)
+        self.val_f1.update(ys_, ys)
+
+    def on_validation_epoch_end(self):
+        self.log_dict({
+            'val_acc': self.val_acc.compute()
+            , 'val_f1': self.val_f1.compute()
+            })
+        self.val_acc.reset()
+        self.val_f1.reset()
 
     def test_step(self, batch, batch_idx):
         _, batch = batch
         xs, ys = batch
         outputs = self.model(**xs, labels=None)
         ys_ = outputs.logits.softmax(dim=1).argmax(dim=1)
-        for metric, metric_f in zip(['test_acc', 'test_f1'], [self.test_acc, self.test_f1]):
-            metric_v = metric_f(ys_, ys).item()
-            self.log(metric, metric_v, on_step=False, on_epoch=True)
+        self.test_acc.update(ys_, ys)
+        self.test_f1.update(ys_, ys)
+
+    def on_test_epoch_end(self):
+        self.log_dict({
+            'test_acc': self.test_acc.compute()
+            , 'test_f1': self.test_f1.compute()
+            })
+        self.test_acc.reset()
+        self.test_f1.reset()
 
     def predict_step(self, batch, batch_idx):
-        raw_batch, batch = batch
-        xs0, xs1, ys = raw_batch
-        xs, _ = batch
+        (xs0, xs1, ys), (xs, _) = batch
         outputs = self.model(**xs, labels=None)
         ys_ = outputs.logits.softmax(dim=1).argmax(dim=1)
         return {'xs0': xs0, 'xs1': xs1, 'ys': ys, 'ys_': ys_}

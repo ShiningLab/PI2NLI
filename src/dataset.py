@@ -8,7 +8,6 @@ __email__ = 'Email'
 import os, random
 # public
 import torch
-import pandas as pd
 from torch.utils.data import Dataset
 # private
 from src import helper
@@ -16,7 +15,7 @@ from src import helper
 
 class PI2NLIDataset(Dataset):
     """docstring for PI2NLIDataset"""
-    def __init__(self, mode, config, samplesize=None):
+    def __init__(self, mode, config, samplesize=100):
         super(PI2NLIDataset, self).__init__()
         assert mode in ['train', 'val', 'test']
         self.mode = mode
