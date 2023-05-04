@@ -1,5 +1,6 @@
 # self defined
 *.ipynb
+*samples.txt
 lm/
 log/
 data/

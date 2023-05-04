@@ -17,7 +17,7 @@ from src import dataset
 from src import models
 
 
-def save_pickle(path, obj):
+def save_pickle(obj, path):
     """
     To save a object as a pickle file.
     """
@@ -61,7 +61,9 @@ def flatten_list(regular_list: list) -> list:
 
 def get_dataset(config):
     match config.method:
-        case 'pi2nli':
+        case 'mut_pi2nli':
+            return dataset.PI2NLIDataset
+        case 'asym_pi2nli':
             return dataset.PI2NLIDataset
         case 'pi':
             return dataset.PIDataset
@@ -70,7 +72,9 @@ def get_dataset(config):
 
 def get_model(config):
     match config.method:
-        case 'pi2nli':
+        case 'mut_pi2nli':
+            return models.PI2NLIClassifier(config)
+        case 'asym_pi2nli':
             return models.PI2NLIClassifier(config)
         case 'pi':
             return models.PIClassifier(config)

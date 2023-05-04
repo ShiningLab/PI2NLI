@@ -12,7 +12,6 @@ import torch
 from lightning.pytorch import seed_everything
 # private
 from config import Config
-from src import helper
 from src.trainer import LitTrainer
 
 
@@ -21,12 +20,7 @@ class PI2NLI(object):
     def __init__(self):
         super(PI2NLI, self).__init__()
         self.config = Config()
-        self.update_config()
         self.initialize()
-
-    def update_config(self):
-        # setup device
-        self.config.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     def initialize(self):
         # get trainer

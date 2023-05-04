@@ -5,22 +5,26 @@ __email__ = 'Email'
 
 
 # built-in
-import os, random
+import random
 # public
 import torch
 from torch.utils.data import Dataset
+from transformers import AutoTokenizer
 # private
 from src import helper
 
 
 class PI2NLIDataset(Dataset):
     """docstring for PI2NLIDataset"""
-    def __init__(self, mode, config, samplesize=100):
+    def __init__(self, mode, config, samplesize=None):
         super(PI2NLIDataset, self).__init__()
         assert mode in ['train', 'val', 'test']
+        assert config.method in ['mut_pi2nli', 'asym_pi2nli']
+        assert config.nli_mode in ['rand', 'nli']
         self.mode = mode
         self.config = config
         self.samplesize = samplesize
+        self.tokenizer=AutoTokenizer.from_pretrained(config.LM_PATH)
         self.get_data()
 
     def __len__(self): 
@@ -28,9 +32,16 @@ class PI2NLIDataset(Dataset):
 
     def get_data(self):
         data_dict = helper.load_pickle(self.config.DATA_PKL)
-        self.xs0_list = data_dict[self.mode]['xs0']
-        self.xs1_list = data_dict[self.mode]['xs1']
-        self.ys_list = data_dict[self.mode]['ys']
+        if self.mode == 'train':
+            data_dict = data_dict[self.config.method]  # mut_pi2nli or asym_pi2nli
+        else:
+            data_dict = data_dict[self.mode]  # val or test
+        self.xs0_list = data_dict['xs0']
+        self.xs1_list = data_dict['xs1']
+        if self.mode == 'train':
+             self.ys_list = data_dict[self.config.nli_mode]  # rand or nli
+        else:
+            self.ys_list = data_dict['ys']
         self.data_size = len(self.ys_list)
         if self.samplesize:
             idxes = list(range(self.data_size))
@@ -39,21 +50,13 @@ class PI2NLIDataset(Dataset):
             self.xs0_list = [self.xs0_list[i] for i in idxes]
             self.xs1_list = [self.xs1_list[i] for i in idxes]
             self.ys_list = [self.ys_list[i] for i in idxes]
-            self.data_size = len(self.ys_list)
+            self.data_size = self.samplesize
 
-    def get_train_instances(self, x0, x1, y):
-        # id2label = {0: "entailment", 1: "neutral", 2: "contradiction"}
-        if y:  # positive instance
-            return (x0, x1, 0), (x0, x1, 0)
-        else:  # negative instance
-            return (x0, x1, random.randint(1, 2)), (x1, x0, random.randint(1, 2))
-
-    def collate_fn(self, tokenizer, training, config, data):
+    def collate_fn(self, training, config, data):
         # a customized collate function used in the data loader
         if training:
-            data = helper.flatten_list(data)
             raw_xs0, raw_xs1, raw_ys = zip(*data)
-            xs_inputs = tokenizer.batch_encode_plus(
+            xs_inputs = self.tokenizer.batch_encode_plus(
                 list(zip(raw_xs0, raw_xs1))
                 , add_special_tokens=True
                 , return_tensors='pt'
@@ -63,8 +66,9 @@ class PI2NLIDataset(Dataset):
              )
             return xs_inputs, torch.LongTensor(raw_ys)
         else:
+            # x0 -> x1
             raw_xs0, raw_xs1, raw_ys = zip(*data)
-            xs_inputs_0 = tokenizer.batch_encode_plus(
+            xs_inputs_0 = self.tokenizer.batch_encode_plus(
                 list(zip(raw_xs0, raw_xs1))
                 , add_special_tokens=True
                 , return_tensors='pt'
@@ -72,7 +76,8 @@ class PI2NLIDataset(Dataset):
                 , truncation=True
                 , max_length=config.max_length
              )
-            xs_inputs_1 = tokenizer.batch_encode_plus(
+            # x1 -> x0
+            xs_inputs_1 = self.tokenizer.batch_encode_plus(
                 list(zip(raw_xs1, raw_xs0))
                 , add_special_tokens=True
                 , return_tensors='pt'
@@ -84,12 +89,7 @@ class PI2NLIDataset(Dataset):
             (xs_inputs_0, xs_inputs_1, torch.LongTensor(raw_ys))
 
     def __getitem__(self, idx):
-        x0, x1, y = self.xs0_list[idx], self.xs1_list[idx], self.ys_list[idx]
-        if self.mode == 'train':
-            # PI2NLI
-            return self.get_train_instances(x0, x1, y)
-        # PI
-        return x0, x1, y
+        return self.xs0_list[idx], self.xs1_list[idx], self.ys_list[idx]
 
 
 class PIDataset(Dataset):
@@ -97,9 +97,12 @@ class PIDataset(Dataset):
     def __init__(self, mode, config, samplesize=None):
         super(PIDataset, self).__init__()
         assert mode in ['train', 'val', 'test']
+        assert config.method in ['pi']
+        assert config.nli_mode in ['none']
         self.mode = mode
         self.config = config
         self.samplesize = samplesize
+        self.tokenizer=AutoTokenizer.from_pretrained(config.LM_PATH)
         self.get_data()
 
     def __len__(self): 
@@ -118,12 +121,12 @@ class PIDataset(Dataset):
             self.xs0_list = [self.xs0_list[i] for i in idxes]
             self.xs1_list = [self.xs1_list[i] for i in idxes]
             self.ys_list = [self.ys_list[i] for i in idxes]
-            self.data_size = len(self.ys_list)
+            self.data_size = self.samplesize
 
-    def collate_fn(self, tokenizer, training, config, data):
+    def collate_fn(self, training, config, data):
         # a customized collate function used in the data loader
         raw_xs0, raw_xs1, raw_ys = zip(*data)
-        xs_inputs = tokenizer.batch_encode_plus(
+        xs_inputs = self.tokenizer.batch_encode_plus(
             list(zip(raw_xs0, raw_xs1))
             , add_special_tokens=True
             , return_tensors='pt'
