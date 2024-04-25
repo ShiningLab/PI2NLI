@@ -1,5 +1,5 @@
-# PI2NLI
-This repository is for the project On the Equivalence of Paraphrase Identification and Natural Language Inference.
+# PI2TI
+This repository is for the paper Paraphrase Identification via Textual Inference.
 
 ## Dependencies
 + python >= 3.10.10
