@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-__author__ = 'Author'
-__email__ = 'Email'
+__author__ = 'Shining'
+__email__ = 'mrshininnnnn@gmail.com'
 
 
 # dependency
 # public
 import torch
 import numpy as np
+import lightning as L
 from transformers import AutoConfig, AutoModelForSequenceClassification
-import lightning.pytorch as pl
 from torchmetrics.classification import Accuracy, BinaryAccuracy, F1Score, BinaryF1Score
 
 
-class PI2NLIClassifier(pl.LightningModule):
+class PI2NLIClassifier(L.LightningModule):
     """docstring for PI2NLIClassifier"""
     def __init__(self, config, **kwargs):
         super(PI2NLIClassifier, self).__init__()
@@ -162,7 +162,7 @@ class PI2NLIClassifier(pl.LightningModule):
         return optimizer
 
 
-class PIClassifier(pl.LightningModule):
+class PIClassifier(L.LightningModule):
     """docstring for PIClassifier"""
     def __init__(self, config, **kwargs):
         super(PIClassifier, self).__init__()
@@ -229,7 +229,7 @@ class PIClassifier(pl.LightningModule):
         self.val_f1.reset()
         self.val_pos_f1.reset()
 
-    def test_step(self, batch, batch_idx):
+    def test_step(self, batch):
         _, batch = batch
         xs, ys = batch
         ys_ = self.model(**xs, labels=None).logits.softmax(dim=1).argmax(dim=1)
@@ -247,7 +247,7 @@ class PIClassifier(pl.LightningModule):
         self.test_f1.reset()
         self.test_pos_f1.reset()
 
-    def predict_step(self, batch, batch_idx):
+    def predict_step(self, batch):
         (xs0, xs1, ys), (xs, _) = batch
         outputs = self.model(**xs, labels=None)
         ys_ = outputs.logits.softmax(dim=1).argmax(dim=1)

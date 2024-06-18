@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-__author__ = 'Author'
-__email__ = 'Email'
+__author__ = 'Shining'
+__email__ = 'mrshininnnnn@gmail.com'
 
 
+# dependency
 # built-in
 import random
 # public
@@ -16,11 +17,10 @@ from src import helper
 
 class PI2NLIDataset(Dataset):
     """docstring for PI2NLIDataset"""
-    def __init__(self, mode, config, samplesize=None):
+    def __init__(self, mode, config, samplesize=512):
         super(PI2NLIDataset, self).__init__()
         assert mode in ['train', 'val', 'test']
         assert config.method in ['mut_pi2nli', 'asym_pi2nli']
-        assert config.nli_mode in ['rand', 'nli']
         self.mode = mode
         self.config = config
         self.samplesize = samplesize
@@ -32,16 +32,14 @@ class PI2NLIDataset(Dataset):
 
     def get_data(self):
         data_dict = helper.load_pickle(self.config.DATA_PKL)
+        # switch among train, val, and test
         if self.mode == 'train':
             data_dict = data_dict[self.config.method]  # mut_pi2nli or asym_pi2nli
         else:
             data_dict = data_dict[self.mode]  # val or test
         self.xs0_list = data_dict['xs0']
         self.xs1_list = data_dict['xs1']
-        if self.mode == 'train':
-             self.ys_list = data_dict[self.config.nli_mode]  # rand or nli
-        else:
-            self.ys_list = data_dict['ys']
+        self.ys_list = data_dict['ys']
         self.data_size = len(self.ys_list)
         if self.samplesize:
             idxes = list(range(self.data_size))
@@ -94,11 +92,10 @@ class PI2NLIDataset(Dataset):
 
 class PIDataset(Dataset):
     """docstring for PIDataset"""
-    def __init__(self, mode, config, samplesize=None):
+    def __init__(self, mode, config, samplesize=512):
         super(PIDataset, self).__init__()
         assert mode in ['train', 'val', 'test']
         assert config.method in ['pi']
-        assert config.nli_mode in ['none']
         self.mode = mode
         self.config = config
         self.samplesize = samplesize

@@ -1,17 +1,13 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-__author__ = 'Author'
-__email__ = 'Email'
+__author__ = 'Shining'
+__email__ = 'mrshininnnnn@gmail.com'
 
 
 # dependency
 # built-in
-import sys, random, pickle, logging
+import sys, pickle, logging, argparse
 # public
-import torch
-import wandb
-import transformers
-import numpy as np
 # private
 from src import dataset
 from src import models

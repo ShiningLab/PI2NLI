@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-__author__ = 'Author'
-__email__ = 'Email'
+__author__ = 'Shining'
+__email__ = 'mrshininnnnn@gmail.com'
 
 
 # dependency
 # built-in
 from functools import partial
 # public
-import lightning.pytorch as pl
+import lightning as L
 from torch.utils.data import DataLoader
 # private
 from src import helper
 
 
-class DataModule(pl.LightningDataModule):
+class DataModule(L.LightningDataModule):
     """docstring for DataModule"""
     def __init__(self, config):
         super(DataModule, self).__init__()

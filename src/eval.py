@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-__author__ = 'Author'
-__email__ = 'Email'
+__author__ = 'Shining'
+__email__ = 'mrshininnnnn@gmail.com'
 
 # dependency
 # public
@@ -10,10 +10,10 @@ import wandb
 from torchmetrics.functional.classification import binary_accuracy, binary_f1_score
 
 
-class Evaluater(object):
-    """docstring for Evaluater"""
+class Evaluator(object):
+    """docstring for Evaluator"""
     def __init__(self, ys_, ys):
-        super(Evaluater, self).__init__()
+        super(Evaluator, self).__init__()
         self.preds = torch.LongTensor(ys_)
         self.target = torch.LongTensor(ys)
 
@@ -28,7 +28,10 @@ class Evaluater(object):
         # update eval info
         self.get_info()
         # update logger
-        wandb.log(self.metrics_dict)
+        try:
+            wandb.log(self.metrics_dict)
+        except:
+            pass
 
     def get_info(self):
         # format

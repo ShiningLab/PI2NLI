@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-__author__ = 'Author'
-__email__ = 'Email'
+__author__ = 'Shining'
+__email__ = 'mrshininnnnn@gmail.com'
 
 
 # dependency
@@ -9,7 +9,7 @@ __email__ = 'Email'
 import os
 # public
 import torch
-from lightning.pytorch import seed_everything
+from lightning import seed_everything
 # private
 from config import Config
 from src.trainer import LitTrainer

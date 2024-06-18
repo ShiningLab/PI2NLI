@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-__author__ = 'Author'
-__email__ = 'Email'
+__author__ = 'Shining'
+__email__ = 'mrshininnnnn@gmail.com'
 
 
 # dependency
 # public
-import lightning.pytorch as pl
-from pytorch_lightning.loggers import WandbLogger
+import lightning as L
+from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.callbacks import ModelCheckpoint, RichProgressBar
 from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 # private
 from src import helper
-from src.eval import Evaluater
+from src.eval import Evaluator
 from src.datamodule import DataModule
 
 
@@ -74,7 +74,7 @@ class LitTrainer(object):
             )
         self.wandb_logger.experiment.config.update(self.config)
         # trainer
-        self.trainer = pl.Trainer(
+        self.trainer = L.Trainer(
             logger = self.wandb_logger
             , callbacks=[checkpoint_callback, early_stop_callback, RichProgressBar()]
             , max_epochs=self.config.max_epochs
@@ -112,7 +112,7 @@ class LitTrainer(object):
         self.test(ckpt_path='best')
         predict_dict = self.predict(ckpt_path='best')
         # evaluation
-        eva = Evaluater(predict_dict['ys_'], predict_dict['ys'])
+        eva = Evaluator(predict_dict['ys_'], predict_dict['ys'])
         eva.get_metrics()
         self.logger.info(eva.info)
         # save results
@@ -152,5 +152,5 @@ class LitTrainer(object):
         # postprocessing
         outputs_dict = dict()
         for k in outputs[0]:
-            outputs_dict[k] = helper.flatten_list([d[k] for d in outputs] )
+            outputs_dict[k] = helper.flatten_list([d[k] for d in outputs])
         return outputs_dict
