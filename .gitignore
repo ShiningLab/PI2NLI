@@ -4,7 +4,10 @@
 *.tsv
 *.ipynb
 *samples.txt
-lm/
+roberta-large/
+roberta-large-snli_mnli_fever_anli_R1_R2_R3-nli/
+xlnet-large-cased/
+xlnet-large-cased-snli_mnli_fever_anli_R1_R2_R3-nli/
 log/
 ckpts/
 results/
