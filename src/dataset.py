@@ -17,7 +17,7 @@ from src import helper
 
 class PI2NLIDataset(Dataset):
     """docstring for PI2NLIDataset"""
-    def __init__(self, mode, config, samplesize=512):
+    def __init__(self, mode, config, samplesize=None):
         super(PI2NLIDataset, self).__init__()
         assert mode in ['train', 'val', 'test']
         assert config.method in ['mut_pi2nli', 'asym_pi2nli']
@@ -92,7 +92,7 @@ class PI2NLIDataset(Dataset):
 
 class PIDataset(Dataset):
     """docstring for PIDataset"""
-    def __init__(self, mode, config, samplesize=512):
+    def __init__(self, mode, config, samplesize=None):
         super(PIDataset, self).__init__()
         assert mode in ['train', 'val', 'test']
         assert config.method in ['pi']
