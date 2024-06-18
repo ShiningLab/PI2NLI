@@ -1,13 +1,19 @@
 # self defined
+*.pkl
 *.pdf
+*.tsv
 *.ipynb
 *samples.txt
 lm/
 log/
-data/
 ckpts/
 results/
 script/
+parade/
+paws_qqp/
+pit/
+qqp/
+twitterurl/
 .DS_Store
 
 # Byte-compiled / optimized / DLL files
