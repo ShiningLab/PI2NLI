@@ -14,6 +14,7 @@ Please ensure required packages are already installed. A virtual environment is 
 ```
 $ pip install --upgrade pip
 $ pip install protobuf==3.20.*
+$ cd PI2NLI
 ```
 
 ## Run
