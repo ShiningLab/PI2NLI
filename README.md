@@ -1,4 +1,4 @@
-# PI2TI
+# PI2NLI
 This repository is for the paper Paraphrase Identification via Textual Inference. In *Proceedings of the 13th Joint Conference on Lexical and Computational Semantics (\*SEM 2024)*, Mexico City, Mexico. Association for Computational Linguistics.
 
 [[Paper](https://github.com/ShiningLab/PI2NLI/blob/main/assets/paper.pdf)] [[Poster](https://github.com/ShiningLab/PI2NLI/blob/main/assets/poster.pdf)] [[Slides](https://github.com/ShiningLab/PI2NLI/blob/main/assets/slides.pdf)]
