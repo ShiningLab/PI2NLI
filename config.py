@@ -17,7 +17,7 @@ def init_args():
     # pi for paraphrase identification
     # mut_pi2nli for mutual entailment
     # asym_pi2nli for asymmetric entailment
-    parser.add_argument('--method', type=str, default='pi')
+    parser.add_argument('--method', type=str, default='mut_pi2nli')
     # pit for Paraphrase and Semantic Similarity in Twitter
     # qqp for Quora Question Pairs
     # mrpc for Microsoft Research Paraphrase Corpus
@@ -25,7 +25,7 @@ def init_args():
     # paws_wiki for Paraphrase Adversaries from Word Scrambling WIKI
     # parade for Paraphrase Identification Requiring Computer Science Domain Knowledge
     # all
-    parser.add_argument('--data', type=str, default='pit')
+    parser.add_argument('--data', type=str, default='mrpc')
     # model
     # roberta-large
     # xlnet-large-cased
@@ -40,7 +40,7 @@ def init_args():
     # training
     parser.add_argument('--train_batch_size', type=int, default=32)
     parser.add_argument('--eval_batch_size', type=int, default=64)
-    parser.add_argument('--max_epochs', type=int, default=1)  # -1 to enable infinite training
+    parser.add_argument('--max_epochs', type=int, default=-1)  # -1 to enable infinite training
     parser.add_argument('--num_workers', type=int, default=8)
     parser.add_argument("--learning_rate", type=float, default=1e-5)
     parser.add_argument("--weight_decay", type=float, default=0.001)

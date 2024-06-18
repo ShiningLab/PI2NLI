@@ -1,6 +1,5 @@
 # self defined
 *.pkl
-*.pdf
 *.tsv
 *.ipynb
 *samples.txt
