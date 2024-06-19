@@ -102,13 +102,14 @@ Trainable params: 355 M
 Non-trainable params: 0
 Total params: 355 M
 Total estimated model params size (MB): 1.4 K
-Epoch 0/-2 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 191/191 0:01:23 • 0:00:00 2.26it/s v_num: 3szp train_step_loss: 0.400 Metric val_f1 improved. New best score: 0.931
+Epoch 0/-2 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 191/191 0:01:23 • 0:00:00 2.26it/s v_num: 3szp train_step_loss: 0.400
+Metric val_f1 improved. New best score: 0.931
 Epoch 0, global step 191: 'val_f1' reached 0.93056 (best 0.93056), saving model to 'PI2NLI/res/ckpts/mut_pi
 2nli/mrpc/roberta-large-snli_mnli_fever_anli_R1_R2_R3-nli/0/epoch=0-step=191-val_f1=0.9306.ckpt' as top 1
-Epoch 1/-2 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 191/191 0:01:24 • 0:00:00 2.24it/s v_num: 3szp train_step_loss: 0.266 Epoch 1
-, global step 382: 'val_f1' was not in top 1
-Epoch 2/-2 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 191/191 0:01:25 • 0:00:00 2.23it/s v_num: 3szp train_step_loss: 0.393 Metric
-val_f1 improved by 0.000 >= min_delta = 0.0. New best score: 0.931
+Epoch 1/-2 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 191/191 0:01:24 • 0:00:00 2.24it/s v_num: 3szp train_step_loss: 0.266
+Epoch 1, global step 382: 'val_f1' was not in top 1
+Epoch 2/-2 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 191/191 0:01:25 • 0:00:00 2.23it/s v_num: 3szp train_step_loss: 0.393
+Metric val_f1 improved by 0.000 >= min_delta = 0.0. New best score: 0.931
 Epoch 2, global step 573: 'val_f1' reached 0.93073 (best 0.93073), saving model to 'PI2NLI/res/ckpts/mut_pi
 2nli/mrpc/roberta-large-snli_mnli_fever_anli_R1_R2_R3-nli/0/epoch=2-step=573-val_f1=0.9307.ckpt' as top 1
 ...
