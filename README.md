@@ -12,6 +12,43 @@ Ensure you have the following dependencies installed:
 + wandb >= 0.17.2
 + rich >= 13.7.1
 
+## Directory
+```
+PI2NLI
+├── README.md
+├── assets
+├── config.py
+├── main.py
+├── requirements.txt
+├── res
+│   ├── ckpts
+│   ├── data
+│   │   ├── README.md
+│   │   ├── all.pkl
+│   │   ├── mrpc.pkl
+│   │   ├── parade.pkl
+│   │   ├── paws_qqp.pkl
+│   │   ├── paws_wiki.pkl
+│   │   ├── pit.pkl
+│   │   ├── qqp.pkl
+│   │   └── twitterurl.pkl
+│   ├── lm
+│   │   ├── README.md
+│   │   ├── roberta-large
+│   │   ├── roberta-large-snli_mnli_fever_anli_R1_R2_R3-nli
+│   │   ├── xlnet-large-cased
+│   │   └── xlnet-large-cased-snli_mnli_fever_anli_R1_R2_R3-nli
+│   ├── log
+│   └── results
+└── src
+    ├── datamodule.py
+    ├── dataset.py
+    ├── eval.py
+    ├── helper.py
+    ├── models.py
+    └── trainer.py
+```
+
 ## Setups
 It is recommended to use a virtual environment to manage dependencies. Follow the steps below to set up the environment and install the required packages:
 ```sh
