@@ -16,7 +16,7 @@ data
 ```
 
 ## Downloads
-You can download the datasets from the Google Drive [PI2NLI Datasets](https://drive.google.com/file/d/1KAnwtAorQlBi02To1AVFOBdE6amzuqOL/view?usp=sharing).
+You can download the datasets from the Google Drive [PI2NLI Datasets](https://drive.google.com/drive/folders/1Iyj_wLEQKGjOWwnQQHCxEIsU8YCZO8P_?usp=sharing).
 
 ## Authors
 * **Ning Shi** - mrshininnnnn@gmail.com
