@@ -1,7 +1,7 @@
 # PI2NLI
-This repository is for the paper Paraphrase Identification via Textual Inference. In *Proceedings of the 13th Joint Conference on Lexical and Computational Semantics (\*SEM 2024)*, Mexico City, Mexico. Association for Computational Linguistics.
+This repository is for the paper Paraphrase Identification via Textual Inference. In *Proceedings of the 13th Joint Conference on Lexical and Computational Semantics (\*SEM 2024)*, pages 133–141, Mexico City, Mexico. Association for Computational Linguistics.
 
-[[Paper](https://github.com/ShiningLab/PI2NLI/blob/main/assets/paper.pdf)] [[Poster](https://github.com/ShiningLab/PI2NLI/blob/main/assets/poster.pdf)] [[Slides](https://github.com/ShiningLab/PI2NLI/blob/main/assets/slides.pdf)]
+[[Paper](https://aclanthology.org/2024.starsem-1.11/)] [[Poster](https://github.com/ShiningLab/PI2NLI/blob/main/assets/poster.pdf)] [[Slides](https://github.com/ShiningLab/PI2NLI/blob/main/assets/slides.pdf)]
 
 ## Dependencies
 Ensure you have the following dependencies installed:
@@ -141,5 +141,21 @@ Predicting ━━━━━━━━━━━━━━━━━━━━━━━
 
 ## BibTex
 ```
-TODO
+@inproceedings{shi-etal-2024-paraphrase,
+    title = "Paraphrase Identification via Textual Inference",
+    author = "Shi, Ning  and
+      Hauer, Bradley  and
+      Riley, Jai  and
+      Kondrak, Grzegorz",
+    editor = "Bollegala, Danushka  and
+      Shwartz, Vered",
+    booktitle = "Proceedings of the 13th Joint Conference on Lexical and Computational Semantics (*SEM 2024)",
+    month = jun,
+    year = "2024",
+    address = "Mexico City, Mexico",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.starsem-1.11",
+    pages = "133--141",
+    abstract = "Paraphrase identification (PI) and natural language inference (NLI) are two important tasks in natural language processing. Despite their distinct objectives, an underlying connection exists, which has been notably under-explored in empirical investigations. We formalize the relationship between these semantic tasks and introduce a method for solving PI using an NLI system, including the adaptation of PI datasets for fine-tuning NLI models. Through extensive evaluations on six PI benchmarks, across both zero-shot and fine-tuned settings, we showcase the efficacy of NLI models for PI through our proposed reduction. Remarkably, our fine-tuning procedure enables NLI models to outperform dedicated PI models on PI datasets. In addition, our findings provide insights into the limitations of current PI benchmarks.",
+}
 ```
