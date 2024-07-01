@@ -22,8 +22,7 @@ You can download the datasets from the Google Drive [PI2NLI Datasets](https://dr
 * **Ning Shi** - mrshininnnnn@gmail.com
 
 ## BibTex
-
-```
+```bibtex
 @inproceedings{dolan-brockett-2005-automatically,
     title = "Automatically Constructing a Corpus of Sentential Paraphrases",
     author = "Dolan, William B.  and

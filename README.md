@@ -59,14 +59,14 @@ $ pip install -r requirements.txt
 
 ## Run
 Before training, review and modify the training configurations in config.py as needed:
-```
+```sh
 $ vim config.py
 $ python main.py
 ```
 
 ## Outputs
 If all goes well, you should see progress similar to the output below:
-```
+```sh
 $ python main.py
 Some weights of the model checkpoint at ./res/lm/roberta-large-snli_mnli_fever_anli_R1_R2_R3-nli were not used when initializing RobertaForSequenceClassification: ['roberta.pooler.dense.bias', 'roberta.pooler.dense.weight']
 - This IS expected if you are initializing RobertaForSequenceClassification from the checkpoint of a model trained on another ta
@@ -140,7 +140,7 @@ Predicting ━━━━━━━━━━━━━━━━━━━━━━━
 * **Ning Shi** - mrshininnnnn@gmail.com
 
 ## BibTex
-```
+```bibtex
 @inproceedings{shi-etal-2024-paraphrase,
     title = "Paraphrase Identification via Textual Inference",
     author = "Shi, Ning  and

@@ -14,7 +14,7 @@ res/lm
 
 ## Downloads
 You can download the models from HuggingFace as follows:
-```
+```sh
 # Make sure you have git-lfs installed (https://git-lfs.com)
 $ git lfs install
 
@@ -29,8 +29,7 @@ $ git clone https://huggingface.co/ynie/xlnet-large-cased-snli_mnli_fever_anli_R
 * **Ning Shi** - mrshininnnnn@gmail.com
 
 ## BibTex
-
-```
+```bibtex
 @article{liu2019roberta,
   title={Roberta: A robustly optimized bert pretraining approach},
   author={Liu, Yinhan and Ott, Myle and Goyal, Naman and Du, Jingfei and Joshi, Mandar and Chen, Danqi and Levy, Omer and Lewis, Mike and Zettlemoyer, Luke and Stoyanov, Veselin},
